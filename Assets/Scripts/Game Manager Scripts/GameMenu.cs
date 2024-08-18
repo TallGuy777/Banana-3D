@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,6 +12,7 @@ public class GameMenu : MonoBehaviour
     [SerializeField] private FirstPersonController FirstPerson;
     [SerializeField] private GameObject MenuInGame, SettingInGame, FpsUI;
     [SerializeField] private Toggle CheckShowFPS;
+    [SerializeField] private TextMeshProUGUI ExitTextTroll;
 
     private void Awake()
     {
@@ -22,6 +24,7 @@ public class GameMenu : MonoBehaviour
 
         // Ẩn FpsUI khi mới vào game
         FpsUI.SetActive(false);
+        ResumeGame();
     }
 
     void Start()
@@ -108,7 +111,9 @@ public class GameMenu : MonoBehaviour
 
     public void BackToMenu()
     {
+        FirstPerson.enabled = false;
         SceneManager.LoadScene("MenuMain");
+        CursorShow();
     }
 
     public void OpenSettingGame()
@@ -132,5 +137,14 @@ public class GameMenu : MonoBehaviour
         }
     }
 
-
+    public void Restart()
+    {
+        SceneManager.LoadScene("BananaMap");
+        ResumeGame();
+        Cursor.visible = false;
+    }
+    public void ExitTroll()
+    {
+        ExitTextTroll.SetText("You can't exit bruh...");
+    }
 }

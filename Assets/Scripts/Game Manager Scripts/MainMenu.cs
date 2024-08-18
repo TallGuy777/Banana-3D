@@ -18,9 +18,6 @@ public class MainMenu : MonoBehaviour
 
     private void Awake()
     {
-        // Hiển thị con trỏ chuột trong Main Menu
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
 
         // Tải giá trị âm lượng từ PlayerPrefs nếu có, nếu không, sử dụng giá trị mặc định 1.0f
         float savedVolume = PlayerPrefs.GetFloat("MusicVolume", 1.0f);
@@ -71,7 +68,7 @@ public class MainMenu : MonoBehaviour
     //Menu Game
     public void StartGame()
     {
-        SceneManager.LoadScene("BananaMap");
+        SceneManager.LoadScene("GioThieu");
     }
 
     public void SettingMenu()

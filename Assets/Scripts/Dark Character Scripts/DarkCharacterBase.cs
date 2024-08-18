@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -11,8 +10,13 @@ public class DarkCharacterBase : MonoBehaviour
     [SerializeField] private RandomMove randomMoveScript;  // Tham chiếu tới RandomMove script
     [SerializeField] private float normalSpeed = 3.5f; // Normal speed of the agent
     [SerializeField] private float chaseSpeed = 7.0f; // Speed of the agent while chasing
-    private bool isMovingToRandomPoint = false;
     [SerializeField] private float randomMoveDelay = 2f; // Thay đổi thời gian này theo ý bạn
+    [SerializeField] private float additionalDistance = 5.0f; // Khoảng cách thêm vào khi đuổi theo người chơi
+    [SerializeField] private AudioSource chaseAudioSource; // Âm thanh phát ra khi đuổi theo
+
+    private bool isMovingToRandomPoint = false;
+    private bool isChasingPlayer = false;
+    private Vector3 lastKnownPlayerPosition;
 
     private void Awake()
     {
@@ -31,14 +35,25 @@ public class DarkCharacterBase : MonoBehaviour
         {
             Debug.LogError("Không tìm thấy RandomMove script trong scene!");
         }
-        
+
+        // Kiểm tra và thiết lập AudioSource
+        if (chaseAudioSource == null)
+        {
+            chaseAudioSource = GetComponent<AudioSource>();
+        }
     }
 
     private void Update()
     {
         if (fieldOfView.canSeePlayer)
         {
+            isChasingPlayer = true;
+            lastKnownPlayerPosition = PlayerTrans.position;
             ChasingPlayer();
+        }
+        else if (isChasingPlayer)
+        {
+            StartCoroutine(GoToLastKnownPosition());
         }
         else
         {
@@ -52,8 +67,46 @@ public class DarkCharacterBase : MonoBehaviour
 
     public void ChasingPlayer()
     {
+        if (!chaseAudioSource.isPlaying)
+        {
+            chaseAudioSource.Play(); // Bắt đầu phát âm thanh khi đuổi theo
+        }
+
         navMeshAgent.speed = chaseSpeed;
         navMeshAgent.SetDestination(PlayerTrans.position);
+    }
+
+    private IEnumerator GoToLastKnownPosition()
+    {
+        // Tính toán vị trí đích mới với khoảng cách thêm vào
+        Vector3 directionToPlayer = (PlayerTrans.position - lastKnownPlayerPosition).normalized;
+        Vector3 destination = lastKnownPlayerPosition + directionToPlayer * additionalDistance;
+
+        navMeshAgent.speed = chaseSpeed;
+        navMeshAgent.SetDestination(destination);
+
+        // Đợi cho đến khi đối tượng hoàn tất di chuyển đến vị trí mất dấu
+        while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
+        {
+            yield return null;
+        }
+
+        // Dừng phát âm thanh khi không còn đuổi theo
+        if (chaseAudioSource.isPlaying)
+        {
+            chaseAudioSource.Stop();
+        }
+
+        // Sau khi đến vị trí mất dấu, tiếp tục các chức năng khác như di chuyển đến điểm ngẫu nhiên
+        isChasingPlayer = false;
+        yield return new WaitForSeconds(randomMoveDelay);
+
+        // Sau khi đã hoàn tất việc di chuyển đến vị trí mất dấu, bắt đầu di chuyển đến điểm ngẫu nhiên
+        if (!isMovingToRandomPoint)
+        {
+            navMeshAgent.speed = normalSpeed;
+            StartCoroutine(MoveToRandomPoint());
+        }
     }
 
     private IEnumerator MoveToRandomPoint()

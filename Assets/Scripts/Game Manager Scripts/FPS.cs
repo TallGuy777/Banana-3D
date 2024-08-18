@@ -17,6 +17,7 @@ public class FPS : MonoBehaviour
         currentFrameTime = Time.realtimeSinceStartup;
         StartCoroutine("WaitForNextFrame");
     }
+
     IEnumerator WaitForNextFrame()
     {
         while (true)
@@ -35,8 +36,13 @@ public class FPS : MonoBehaviour
             }
         }
     }
+
     void FixedUpdate()
     {
-        fpsText.text="FPS: "+TargetFrameRate.ToString();
+        // Kiểm tra fpsText không phải là null trước khi sử dụng
+        if (fpsText != null)
+        {
+            fpsText.text = "FPS: " + TargetFrameRate.ToString();
+        }
     }
 }

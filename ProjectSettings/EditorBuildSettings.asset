@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/MenuMain.unity
     guid: 2fd48a49896c6854d8dbfe49cfd56b80
   - enabled: 1
+    path: Assets/Scenes/GioThieu.unity
+    guid: 2bd74bf0f62d09c499004d5131cb18e5
+  - enabled: 1
     path: Assets/Scenes/BananaMap.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   m_configObjects: {}

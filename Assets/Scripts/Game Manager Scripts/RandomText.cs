@@ -15,7 +15,13 @@ public class RandomText : MonoBehaviour
     private void Awake()
     {
         Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // Đảm bảo DarkImage và tất cả các textRan đều bị tắt khi scene được tải
+        DarkImage.SetActive(false);
+        HideAllText();
     }
+
     private void FixedUpdate()
     {
         if (IsMouseOverUI())
@@ -26,7 +32,7 @@ public class RandomText : MonoBehaviour
                 ShowRandomText();
                 DarkImage.SetActive(true);
 
-                // Play the sound effect once when the mouse enters the area
+                // Phát âm thanh khi chuột di vào
                 if (!DarkSoundEffect.isPlaying)
                 {
                     DarkSoundEffect.Play();
@@ -41,7 +47,7 @@ public class RandomText : MonoBehaviour
                 DarkImage.SetActive(false);
                 HideAllText();
 
-                // Stop the sound effect when the mouse leaves the area
+                // Ngừng phát âm thanh khi chuột rời đi
                 DarkSoundEffect.Stop();
             }
         }

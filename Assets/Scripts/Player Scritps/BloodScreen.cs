@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI; // Make sure to include this to access RawImage
-
+using UnityEngine.UI;
+using UnityStandardAssets.Characters.FirstPerson;
 public class BloodScreen : MonoBehaviour
 {
     public RawImage bloodImage; // Reference to the RawImage component
@@ -10,39 +10,81 @@ public class BloodScreen : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private BoxCollider box;
     [SerializeField] private AudioListener DeathCamera;
+    [SerializeField] private AudioListener Maincamera;
+    [SerializeField] private AudioSource Screaming,ScareSound;
+
+    [SerializeField] private GameObject LostGameUI;
+    [SerializeField] private FirstPersonController FirstPerson;
+    private bool hasPlayedScreaming = false; // Flag to check if Screaming has been played
+
     void Awake()
     {
-        DontDestroyOnLoad(gameObject);
-        Player = GameObject.FindGameObjectWithTag("Player");
-        rb = GetComponent<Rigidbody>();
-        box = GetComponent<BoxCollider>();
-        DeathCamera = GetComponent<AudioListener>();
+        // Tìm và gán các thành phần nếu chưa được gán từ Inspector
+        if (Player == null) Player = GameObject.FindGameObjectWithTag("Player");
+        if (rb == null) rb = GetComponent<Rigidbody>();
+        if (box == null) box = GetComponent<BoxCollider>();
+
+        // Tìm các AudioListener trong scene
+        if (DeathCamera == null) DeathCamera = FindObjectOfType<AudioListener>();
+        if (Maincamera == null) Maincamera = FindObjectOfType<AudioListener>();
+
+        if (DeathCamera == null || Maincamera == null)
+        {
+            Debug.LogError("Không tìm thấy AudioListener trong scene. Hãy đảm bảo có ít nhất một AudioListener.");
+        }
+
+        FirstPerson = FindAnyObjectByType<FirstPersonController>();
+
         SetImageAlpha(0f);
+        DeathCamera.enabled = false;
+        Maincamera.enabled = true;
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
-        if (Player.activeInHierarchy)
+        if (Player != null)
         {
-            box.enabled = false;
-            DeathCamera.enabled = false;
-            rb.isKinematic = true;
-            SetImageAlpha(0f);
-        }
-        else
-        {
-            box.enabled = true;
-            DeathCamera.enabled = true;
-            rb.isKinematic = false;
-            StartCoroutine(FadeInBloodScreen());
+            if (Player.activeInHierarchy)
+            {
+                // Khi Player còn hoạt động
+                SetImageAlpha(0f);
+                box.enabled = false;
+                if (DeathCamera != null) DeathCamera.enabled = false;
+                if (Maincamera != null) Maincamera.enabled = true;
+                rb.isKinematic = true;
+                LostGameUI.SetActive(false);
+                // Reset flag khi Player trở lại hoạt động
+                hasPlayedScreaming = false;
+                UnityEngine.Cursor.visible = false;
+            }
+            else
+            {
+                // Khi Player không còn hoạt động
+                if (!hasPlayedScreaming)
+                {
+                    Screaming.Play();
+                    ScareSound.Play();
+                    hasPlayedScreaming = true; // Set flag to true to prevent replay
+                }
+
+                box.enabled = true;
+                if (DeathCamera != null) DeathCamera.enabled = true;
+                if (Maincamera != null) Maincamera.enabled = false;
+                rb.isKinematic = false;
+                LostGameUI.SetActive(true);
+                StartCoroutine(FadeInBloodScreen());
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+                UnityEngine.Cursor.visible = true;
+            }
         }
     }
+
     private IEnumerator FadeInBloodScreen()
     {
         float elapsedTime = 0f;
         Color currentColor = bloodImage.color;
 
-        // Fade in from 0% to 100%
+        // Fade in từ 0% đến 100%
         while (elapsedTime < fadeDuration)
         {
             elapsedTime += Time.deltaTime;
@@ -51,7 +93,7 @@ public class BloodScreen : MonoBehaviour
             yield return null;
         }
 
-        // Ensure final alpha is set to 100%
+        // Đảm bảo alpha cuối cùng là 100%
         SetImageAlpha(1f);
     }
 
